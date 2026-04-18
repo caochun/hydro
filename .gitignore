@@ -1,0 +1,60 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# Local virtual environments
+.venv/
+venv/
+
+# Keep project MCP config, ignore other editor-local files
+.vscode/*
+!.vscode/mcp.json
+
+# Local MCP / QGIS runtime artifacts
+qgis_preview.png
+
+# QGIS autosave / backups
+*.qgz~
+*.qgs~
+
+# Generated inference outputs
+*_prob.img
+*_prob.hdr
+*_mask.img
+*_mask.hdr
+*_valid.img
+*_valid.hdr
+*_water.shp
+*_water.shx
+*_water.dbf
+*_water.prj
+*_water.cpg
+*_water.qix
+*_water.sbn
+*_water.sbx
+
+# Inference scripts (model-dependent, not for distribution)
+infer_s2_water_from_10m_envi_toa_no_cli_fixed_v3.py
+
+# Local raster inputs / large data files
+S2A_MSIL1C_20250701.img
+S2A_MSIL1C_20250701.hdr
+S2A_MSIL1C_20250701.img.aux.xml
+S2B_MSIL1C_20260202/
+
+# Extracted water outputs
+water_out/
+
+# NDWI / MNDWI intermediate rasters
+*_ndwi.img
+*_ndwi.hdr
+*_mndwi.img
+*_mndwi.hdr
+*_water.img
+*_water.hdr
+*_visual.png

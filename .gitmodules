@@ -1,0 +1,3 @@
+[submodule "qgis-mcp"]
+	path = qgis-mcp
+	url = git@github.com:nkarasiak/qgis-mcp.git
