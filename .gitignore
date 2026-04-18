@@ -11,9 +11,8 @@ __pycache__/
 .venv/
 venv/
 
-# Keep project MCP config, ignore other editor-local files
-.vscode/*
-!.vscode/mcp.json
+# Editor local files
+.vscode/
 
 # Local MCP / QGIS runtime artifacts
 qgis_preview.png

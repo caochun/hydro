@@ -1,8 +1,0 @@
-{
-  "servers": {
-    "qgis": {
-      "type": "stdio",
-      "command": "/Users/chun/Develop/hydro/scripts/run-qgis-mcp.sh"
-    }
-  }
-}
