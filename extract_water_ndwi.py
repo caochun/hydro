@@ -15,7 +15,6 @@ from pathlib import Path
 import re
 
 import numpy as np
-from scipy import ndimage
 import rasterio
 from rasterio.features import shapes
 import fiona
@@ -41,7 +40,6 @@ MNDWI_THRESH  = -0.1      # MNDWI > 此值 判定为水体（两者取并集）
 USE_MNDWI     = True      # True=用 MNDWI，False=只用 NDWI
 MIN_AREA_M2   = 100000.0  # 最小水体面积（平方米），过滤噪声小斑块（0.1 km²）
 CLOUD_B02_MAX = 0.25      # B02 反射率上限：超过此值视为云，排除（0~1，调小=更严格）
-CLOSING_M     = 30        # 形态学闭运算填补间隙距离（米），0=不做；30m填补3个像元的断裂
 WATER_COLOR   = (0, 100, 220)   # 水体高亮颜色 RGB，默认蓝色
 WATER_ALPHA   = 0.55            # 水体叠加透明度（0=完全透明，1=完全覆盖）
 PREVIEW_MAX_PX = 10000          # 预览图最长边像素上限，超出则缩放
@@ -231,15 +229,6 @@ def main():
     else:
         water = water_ndwi.astype(np.uint8)
         method = "NDWI"
-
-    # ── 形态学闭运算（填补河流断裂间隙）────────────────────────────────────────
-    if CLOSING_M > 0:
-        pixel_size = abs(src.transform.a)  # 米/像元
-        gap_px = max(1, round(CLOSING_M / pixel_size))
-        struct = np.ones((gap_px * 2 + 1, gap_px * 2 + 1), dtype=np.uint8)
-        water = ndimage.binary_closing(water, structure=struct).astype(np.uint8)
-        water[~valid] = 0
-        print(f"[INFO] 闭运算: {CLOSING_M}m ({gap_px}px)")
 
     water_px = int(water.sum())
     print(f"[INFO] 方法={method}  水体像元数={water_px:,}  "
