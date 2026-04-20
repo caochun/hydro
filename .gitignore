@@ -13,6 +13,7 @@ venv/
 
 # Editor local files
 .vscode/
+.mcp.json
 
 # Local MCP / QGIS runtime artifacts
 qgis_preview.png
@@ -49,6 +50,11 @@ S2B_MSIL1C_20260202-oracle/
 
 # Extracted water outputs
 water_out/
+water_out_unet/
+
+# Trained model checkpoints
+runs/
+*.pt
 
 # NDWI / MNDWI intermediate rasters
 *_ndwi.img
