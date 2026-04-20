@@ -34,6 +34,7 @@ BAND_B08 = None
 
 STRIDE_FRAC   = 0.5     # 瓦片步长 = tile * STRIDE_FRAC，重叠区取概率平均
 BATCH_SIZE    = 16
+USE_TTA       = False   # 测试时增强：翻转 + 旋转 8 向平均，推理慢 ~6x 但 IoU +0.5-1%
 MIN_AREA_M2   = 100000.0
 WATER_COLOR   = (0, 100, 220)
 WATER_ALPHA   = 0.55
@@ -192,15 +193,26 @@ def main():
     print(f"[INFO] 加载模型: {MODEL_PATH}")
     ckpt = torch.load(MODEL_PATH, map_location="cpu", weights_only=False)
     mc = ckpt["config"]
-    tile = mc["tile_size"]
-    image_scale = mc["image_scale"]
-    clip_max = mc["image_clip_max"]
-    threshold = mc["threshold"]
+    tile = mc.get("tile_size", 256)
+    image_scale = mc.get("image_scale", 10000.0)
+    clip_max = mc.get("image_clip_max", 1.0)
+    threshold = mc.get("threshold", 0.5)
     device = torch.device("cuda" if torch.cuda.is_available()
                           else "mps" if torch.backends.mps.is_available() else "cpu")
     print(f"[INFO] device={device}  tile={tile}  threshold={threshold}  epoch={ckpt['epoch']}  IoU={ckpt['iou']:.4f}")
 
-    model = UNetSmall(mc["in_channels"], mc["base_channels"]).to(device)
+    if mc.get("model") == "smp.Unet":
+        import segmentation_models_pytorch as smp
+        model = smp.Unet(
+            encoder_name=mc["encoder"],
+            encoder_weights=None,
+            in_channels=mc["in_channels"],
+            classes=1,
+        ).to(device)
+        print(f"[INFO] model=smp.Unet({mc['encoder']})")
+    else:
+        model = UNetSmall(mc["in_channels"], mc["base_channels"]).to(device)
+        print("[INFO] model=UNetSmall")
     model.load_state_dict(ckpt["state_dict"])
     model.eval()
 
@@ -237,12 +249,33 @@ def main():
         batch_xy      = []
         done = 0
 
+        def tta_forward(x):
+            variants = []
+            for hflip in [False, True]:
+                for vflip in [False, True]:
+                    xa = x
+                    if hflip: xa = torch.flip(xa, dims=[3])
+                    if vflip: xa = torch.flip(xa, dims=[2])
+                    p = torch.sigmoid(model(xa)).squeeze(1)
+                    if hflip: p = torch.flip(p, dims=[2])
+                    if vflip: p = torch.flip(p, dims=[1])
+                    variants.append(p)
+            for k in [1, 2, 3]:
+                xa = torch.rot90(x, k, dims=[2, 3])
+                p  = torch.sigmoid(model(xa)).squeeze(1)
+                p  = torch.rot90(p, -k, dims=[1, 2])
+                variants.append(p)
+            return torch.stack(variants).mean(dim=0)
+
         def flush():
             nonlocal batch_patches, batch_xy
             if not batch_patches: return
             x = torch.from_numpy(np.stack(batch_patches)).to(device)
             with torch.no_grad():
-                probs = torch.sigmoid(model(x)).squeeze(1).cpu().numpy()
+                if USE_TTA:
+                    probs = tta_forward(x).cpu().numpy()
+                else:
+                    probs = torch.sigmoid(model(x)).squeeze(1).cpu().numpy()
             for (x0, y0, h_eff, w_eff), p in zip(batch_xy, probs):
                 prob_sum[y0:y0+h_eff, x0:x0+w_eff] += p[:h_eff, :w_eff]
                 cnt     [y0:y0+h_eff, x0:x0+w_eff] += 1.0
