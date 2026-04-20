@@ -1,0 +1,11 @@
+# 推理（运行 extract_water_unet.py / ensemble.py）
+torch>=2.0
+segmentation-models-pytorch>=0.5
+rasterio>=1.3
+fiona>=1.9
+shapely>=2.0
+numpy>=1.24
+Pillow>=10.0
+
+# 训练（仅训练用，客户只推理可以不装）
+# tqdm>=4.65
