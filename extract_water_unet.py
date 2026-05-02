@@ -100,7 +100,8 @@ def detect_bands(hdr_path: Path) -> dict:
     m = re.search(r"band names\s*=\s*\{([^}]+)\}", text, re.IGNORECASE | re.DOTALL)
     if not m: return {}
     names = [n.strip().lower() for n in m.group(1).split(",")]
-    targets = {"rhos_492": "b02", "rhos_560": "b03", "rhos_665": "b04", "rhos_833": "b08"}
+    targets = {"rhos_492": "b02", "rhos_560": "b03", "rhos_665": "b04", "rhos_833": "b08",
+               "rhot_492": "b02", "rhot_560": "b03", "rhot_665": "b04", "rhot_833": "b08"}
     result = {}
     for i, name in enumerate(names, start=1):
         for key, alias in targets.items():
@@ -201,7 +202,8 @@ def main():
                           else "mps" if torch.backends.mps.is_available() else "cpu")
     print(f"[INFO] device={device}  tile={tile}  threshold={threshold}  epoch={ckpt['epoch']}  IoU={ckpt['iou']:.4f}")
 
-    if mc.get("model") == "smp.Unet":
+    is_smp = mc.get("model") == "smp.Unet"
+    if is_smp:
         import segmentation_models_pytorch as smp
         model = smp.Unet(
             encoder_name=mc["encoder"],
@@ -213,6 +215,7 @@ def main():
     else:
         model = UNetSmall(mc["in_channels"], mc["base_channels"]).to(device)
         print("[INFO] model=UNetSmall")
+        is_smp = False
     model.load_state_dict(ckpt["state_dict"])
     model.eval()
 
@@ -313,10 +316,11 @@ def main():
 
     print(f"[INFO] 水体像元={int(water.sum()):,}  面积≈{water.sum()*100:.0f} m²")
 
-    prob_path  = OUT_DIR / f"{prefix}_prob.img"
-    water_path = OUT_DIR / f"{prefix}_water.img"
-    shp_path   = OUT_DIR / f"{prefix}_water.shp"
-    vis_path   = OUT_DIR / f"{prefix}_visual.png"
+    model_tag  = "_smp" if is_smp else ""
+    prob_path  = OUT_DIR / f"{prefix}_prob{model_tag}.img"
+    water_path = OUT_DIR / f"{prefix}_water{model_tag}.img"
+    shp_path   = OUT_DIR / f"{prefix}_water{model_tag}.shp"
+    vis_path   = OUT_DIR / f"{prefix}_visual{model_tag}.png"
 
     write_envi(prob_path,  prob_avg, profile, "water_prob")
     write_envi(water_path, water,    profile, "water_mask")
