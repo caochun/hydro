@@ -6,6 +6,8 @@ fiona>=1.9
 shapely>=2.0
 numpy>=1.24
 Pillow>=10.0
+requests>=2.31
+pyshp>=2.3
 
 # 训练（仅训练用，客户只推理可以不装）
 # tqdm>=4.65

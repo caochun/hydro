@@ -15,6 +15,13 @@ venv/
 .vscode/
 .mcp.json
 
+# Local secrets
+.env
+.env*
+*.env
+!.env.example
+!*.env.example
+
 # Local MCP / QGIS runtime artifacts
 qgis_preview.png
 
@@ -42,6 +49,11 @@ qgis_preview.png
 infer_s2_water_from_10m_envi_toa_no_cli_fixed_v3.py
 
 # Local raster inputs / large data files
+data/
+data_download/Base/
+data_download/Buffer_province/
+data_download/Single/
+data_download/downloads/
 S2A_MSIL1C_20250701.img
 S2A_MSIL1C_20250701.hdr
 S2A_MSIL1C_20250701.img.aux.xml
@@ -50,6 +62,7 @@ S2B_MSIL1C_20260202-oracle/
 
 # Extracted water outputs
 water_out/
+water_out_*/
 water_out_unet/
 
 # Trained model checkpoints

@@ -1,3 +1,6 @@
 [submodule "qgis-mcp"]
 	path = qgis-mcp
 	url = git@github.com:nkarasiak/qgis-mcp.git
+[submodule "lakes"]
+	path = lakes
+	url = git@github.com:9triver/lakes.git
